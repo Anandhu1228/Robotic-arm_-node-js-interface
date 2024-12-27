@@ -1,0 +1,127 @@
+<style>
+
+    body {
+        background-image: url('/images/arm.jpg');
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        height: 100vh;
+        margin: 0;
+        position: relative;
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    .slider-container {
+        position: absolute;
+        width: 200px;
+        height: 20px;
+        background: #ddd;
+        border-radius: 15px;
+        overflow: visible;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .slider {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 20px;
+        height: 20px;
+        background: #4caf50;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .slide1 { top: 710px; left: 630px; }
+    .slide2 { top: 610px; left: 1040px; }
+    .slide3 { top: 300px; left: 450px; }
+    .slide4 { top: 80px; left: 690px; }
+    .slide5 { top: 55px; left: 1110px; }
+    .slide6 { top: 290px; left: 1200px; }
+
+</style>
+
+<body>
+
+    <div class="slider-container slide1">
+        <div class="slider" data-servo="1"></div>
+    </div>
+    <div class="slider-container slide2">
+        <div class="slider" data-servo="2"></div>
+    </div>
+    <div class="slider-container slide3">
+        <div class="slider" data-servo="3"></div>
+    </div>
+    <div class="slider-container slide4">
+        <div class="slider" data-servo="4"></div>
+    </div>
+    <div class="slider-container slide5">
+        <div class="slider" data-servo="5"></div>
+    </div>
+    <div class="slider-container slide6">
+        <div class="slider" data-servo="6"></div>
+    </div>
+
+    <script>
+
+        document.querySelectorAll('.slider').forEach(slider => {
+            const container = slider.parentElement;
+            const servoIndex = slider.getAttribute('data-servo'); // Get the servo index from data attribute
+
+            let isDragging = false;
+
+            slider.addEventListener('mousedown', () => {
+                isDragging = true;
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            document.addEventListener('mousemove', (event) => {
+                if (!isDragging) return;
+
+                const rect = container.getBoundingClientRect();
+                let x = event.clientX - rect.left;
+
+                // Ensure the slider stays within the container
+                if (x < 10) x = 10; // Left boundary
+                if (x > rect.width - 10) x = rect.width - 10; // Right boundary
+
+                slider.style.left = `${x}px`;
+
+                // Calculate the position as a percentage (0-100)
+                const percentage = (x / rect.width) * 100;
+
+                // Log the slider movement and the position value
+                //console.log(`Slider ${servoIndex} moved to position: ${percentage}%`);
+
+                // Send the position to the server via a POST request for the correct servo
+                fetch(`/servo/${servoIndex}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ position: percentage }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    //console.log('Server response:', data);
+                    // Display the server feedback in the console
+                    //alert(`Arduino feedback: ${data.message}`); // Display Arduino's feedback
+                })
+                .catch(error => console.error('Error sending data to server:', error));
+            });
+
+            // On page load, set the slider to the middle
+            window.addEventListener('load', () => {
+                const rect = container.getBoundingClientRect();
+                slider.style.left = `${rect.width / 2}px`;
+            });
+        });
+
+    </script>
+    
+</body>

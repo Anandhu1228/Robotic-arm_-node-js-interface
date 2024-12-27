@@ -1,0 +1,114 @@
+# NEW CODE
+
+#include <Servo.h>
+#include <EEPROM.h>
+
+Servo myServo[6];  // Array of servo objects for each joint
+int pos[6];        // Array to store the position for each servo
+
+void setup() {
+  Serial.begin(9600);  // Initialize serial communication at 9600 baud rate
+
+  // Attach the servos to their respective pins
+  myServo[0].attach(9);   // Pin 9 for Servo 1
+  myServo[1].attach(10);  // Pin 10 for Servo 2
+  myServo[2].attach(11);  // Pin 11 for Servo 3
+  myServo[3].attach(12);  // Pin 12 for Servo 4
+  myServo[4].attach(13);  // Pin 13 for Servo 5
+  myServo[5].attach(6);   // Pin 6 for Servo 6
+
+  // Read last saved positions from EEPROM and set servos
+  for (int i = 0; i < 6; i++) {
+    pos[i] = EEPROM.read(i);  // Retrieve position from EEPROM
+    if (pos[i] < 0 || pos[i] > 180) {
+      pos[i] = 90;  // Default to 90 if stored value is invalid
+    }
+    myServo[i].write(pos[i]);  // Set servo to the stored position
+  }
+
+  Serial.println("Arduino Servo Controller Initialized");
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    String input = Serial.readStringUntil('\n');  // Read the incoming string
+
+    // Validate and parse the input
+    if (input.length() > 3 && input.charAt(0) == 'S') {
+      int index = input.charAt(1) - '1';  // Extract servo index (1-6)
+      int angle = input.substring(3).toInt();  // Extract angle value (0-180)
+
+      if (index >= 0 && index < 6 && angle >= 0 && angle <= 180) {
+        myServo[index].write(angle);  // Move the corresponding servo
+        pos[index] = angle;  // Update the position array
+        EEPROM.write(index, angle);  // Save the new position to EEPROM
+        delay(15);  // Small delay for servo movement
+        Serial.println("Command successful");
+      } else {
+        Serial.println("Invalid servo index or angle received!");
+      }
+    } else {
+      Serial.println("Invalid input format received!");
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# OLD CODE
+
+
+#include <Servo.h>
+
+Servo myServo[6];  // Array of servo objects for each joint
+int pos[6];         // Array to store the position for each servo
+
+void setup() {
+  Serial.begin(9600);  // Initialize serial communication at 9600 baud rate
+
+  // Attach the servos to their respective pins
+  myServo[0].attach(9);   // Pin 9 for Servo 1
+  myServo[1].attach(10);  // Pin 10 for Servo 2
+  myServo[2].attach(11);  // Pin 11 for Servo 3
+  myServo[3].attach(12);  // Pin 12 for Servo 4
+  myServo[4].attach(13);  // Pin 13 for Servo 5
+  myServo[5].attach(6);   // Pin 6 for Servo 6
+
+  Serial.println("Arduino Servo Controller Initialized");
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    String input = Serial.readStringUntil('\n');  // Read the incoming string
+
+    // Validate and parse the input
+    if (input.length() > 3 && input.charAt(0) == 'S') {
+      int index = input.charAt(1) - '1';  // Extract servo index (1-6)
+      int angle = input.substring(3).toInt();  // Extract angle value (0-180)
+
+      if (index >= 0 && index < 6 && angle >= 0 && angle <= 180) {
+          myServo[index].write(angle);  // Move the corresponding servo
+          delay(15);  // Small delay for servo movement
+          Serial.println("Command successful");
+      } else {
+          Serial.println("Invalid servo index or angle received!");
+      }
+    } else {
+      Serial.println("Invalid input format received!");
+    }
+  }
+}
